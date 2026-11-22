@@ -1,0 +1,12 @@
+#pragma once
+
+// Generated at configure time from cmake/BuildConfig.hpp.in. The git tag and
+// commit change with every commit and live in GitInfo.hpp, so a new commit does
+// not recompile everything that needs only the version.
+
+namespace BuildInfo {
+
+inline constexpr const char *applicationVersion = "@PROJECT_VERSION@";
+inline constexpr const char *cmakeVersion = "@CMAKE_VERSION@";
+
+}  // namespace BuildInfo

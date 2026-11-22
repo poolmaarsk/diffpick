@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file alias="diffpick.png">diffpick-256.png</file>
+    </qresource>
+</RCC>
