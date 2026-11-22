@@ -64,7 +64,7 @@ if [[ ! -f "$license_destination" ]]; then
     exit 1
 fi
 
-output="$output_dir/diffpick-linux-x86_64.AppImage"
+output="$output_dir/diffpick-$version-linux-x86_64.AppImage"
 rm -f "$output"
 
 export APPIMAGE_EXTRACT_AND_RUN=1

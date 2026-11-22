@@ -4,7 +4,7 @@
     <parameter name="version" required="true" />
   </parameters>
   <zip-file>
-    <zip-file path="diffpick-windows-x64.zip">
+    <zip-file path="diffpick-${version}-windows-x64.zip">
       <pe-file path="diffpick.exe" product-name="Diffpick"
                original-filename="diffpick.exe"
                product-version="${version}" file-version="${version}">

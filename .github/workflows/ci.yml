@@ -54,6 +54,7 @@ jobs:
     outputs:
       artifact_id: ${{ steps.upload-windows.outputs.artifact-id }}
       product_version: ${{ steps.windows-version.outputs.version }}
+      package_name: ${{ steps.windows-version.outputs.package_name }}
 
     steps:
       - name: Check out sources
@@ -102,13 +103,14 @@ jobs:
             throw 'The packaged executable has invalid product metadata.'
           }
           "version=$($versionInfo.ProductVersion)" >> $env:GITHUB_OUTPUT
+          "package_name=diffpick-$($versionInfo.ProductVersion)-windows-x64" >> $env:GITHUB_OUTPUT
 
       - name: Upload portable package
         id: upload-windows
         uses: actions/upload-artifact@v4
         with:
-          name: diffpick-windows-x64
-          path: build-Windows/package/diffpick-windows-x64.zip
+          name: ${{ steps.windows-version.outputs.package_name }}
+          path: build-Windows/package/${{ steps.windows-version.outputs.package_name }}.zip
           if-no-files-found: error
 
   sign-windows:
@@ -138,8 +140,10 @@ jobs:
             version: ${{ toJSON(needs.windows.outputs.product_version) }}
 
       - name: Verify the timestamped executable
+        env:
+          PACKAGE_NAME: ${{ needs.windows.outputs.package_name }}
         run: |
-          Expand-Archive -LiteralPath signed/diffpick-windows-x64.zip -DestinationPath verify-signed
+          Expand-Archive -LiteralPath "signed/$env:PACKAGE_NAME.zip" -DestinationPath verify-signed
           $signature = Get-AuthenticodeSignature -LiteralPath verify-signed/diffpick.exe
           if ($signature.Status -ne 'Valid' -or -not $signature.TimeStamperCertificate) {
             throw "Expected a valid timestamped Authenticode signature. Status: $($signature.Status)"
@@ -148,8 +152,8 @@ jobs:
       - name: Upload verified signed package
         uses: actions/upload-artifact@v4
         with:
-          name: diffpick-windows-x64-signed
-          path: signed/diffpick-windows-x64.zip
+          name: ${{ needs.windows.outputs.package_name }}-signed
+          path: signed/${{ needs.windows.outputs.package_name }}.zip
           if-no-files-found: error
 
   appimage:
@@ -178,16 +182,26 @@ jobs:
         run: cmake --preset linux-release
 
       - name: Create AppImage
-        run: cmake --build build-Linux --target package_appimage --parallel
+        id: appimage-package
+        run: |
+          cmake --build build-Linux --target package_appimage --parallel
+          packages=(build-Linux/package/diffpick-*-linux-x86_64.AppImage)
+          if [[ ${#packages[@]} -ne 1 || ! -x "${packages[0]}" ]]; then
+            echo "Expected one versioned AppImage in build-Linux/package."
+            exit 1
+          fi
+          echo "name=$(basename "${packages[0]}" .AppImage)" >> "$GITHUB_OUTPUT"
+          echo "path=${packages[0]}" >> "$GITHUB_OUTPUT"
 
       - name: Smoke-test AppImage
+        env:
+          APPIMAGE_PATH: ${{ steps.appimage-package.outputs.path }}
         run: |
-          xvfb-run -a env APPIMAGE_EXTRACT_AND_RUN=1 \
-            ./build-Linux/package/diffpick-linux-x86_64.AppImage --version
+          xvfb-run -a env APPIMAGE_EXTRACT_AND_RUN=1 "./$APPIMAGE_PATH" --version
 
       - name: Upload AppImage
         uses: actions/upload-artifact@v4
         with:
-          name: diffpick-linux-x86_64
-          path: build-Linux/package/diffpick-linux-x86_64.AppImage
+          name: ${{ steps.appimage-package.outputs.name }}
+          path: ${{ steps.appimage-package.outputs.path }}
           if-no-files-found: error

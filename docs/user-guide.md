@@ -156,7 +156,8 @@ Nautilus, Nemo, or Caja, or look for **Diffpick** in Dolphin's context menu.
 
 Run these examples from a directory containing the named files. Use the
 actual executable path if Diffpick is outside your PATH, such as
-`./diffpick-linux-x86_64.AppImage` on Linux or `.\diffpick.exe` in PowerShell.
+the downloaded AppImage on Linux (for example, `./diffpick-0.1.0-linux-x86_64.AppImage`) or
+`.\diffpick.exe` in PowerShell.
 
 ```sh
 diffpick --open before.txt after.txt

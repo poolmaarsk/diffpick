@@ -36,6 +36,7 @@ if(WIN32)
         COMMAND "${POWERSHELL_EXECUTABLE}" -NoProfile -ExecutionPolicy Bypass
             -File "${CMAKE_SOURCE_DIR}/scripts/package-windows.ps1"
             -BuildDir "${CMAKE_BINARY_DIR}"
+            -Version "${PROJECT_VERSION}"
             -WindeployQt "${WINDEPLOYQT_EXECUTABLE}"
             -QtLicense "${QT_LGPL_FILE}"
         DEPENDS diffpick

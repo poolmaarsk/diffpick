@@ -22,7 +22,7 @@ provided by [SignPath Foundation](https://signpath.org/).
    [GitHub trusted build system](https://docs.signpath.io/trusted-build-systems/github).
    Require verified origin and manual approval in the release signing policy.
 4. Use [the artifact configuration](../packaging/windows/signpath.xml) with the
-   existing `diffpick-windows-x64` Actions artifact. The outer ZIP is created by
+   `diffpick-<version>-windows-x64` Actions artifact. The outer ZIP is created by
    GitHub Actions and contains the portable ZIP. The only signing target is
    `diffpick.exe` inside the portable ZIP.
 5. In GitHub, create a `signpath` environment restricted to the default

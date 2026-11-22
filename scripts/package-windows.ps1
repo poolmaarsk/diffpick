@@ -2,6 +2,9 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$BuildDir,
     [Parameter(Mandatory = $true)]
+    [ValidatePattern('^\d+\.\d+\.\d+$')]
+    [string]$Version,
+    [Parameter(Mandatory = $true)]
     [string]$WindeployQt,
     [Parameter(Mandatory = $true)]
     [string]$QtLicense
@@ -23,7 +26,7 @@ if (-not (Test-Path -LiteralPath $QtLicense -PathType Leaf)) {
 
 $packageRoot = [IO.Path]::GetFullPath((Join-Path $resolvedBuild 'package'))
 $stageDir = [IO.Path]::GetFullPath((Join-Path $packageRoot 'diffpick'))
-$zipPath = [IO.Path]::GetFullPath((Join-Path $packageRoot 'diffpick-windows-x64.zip'))
+$zipPath = Join-Path $packageRoot "diffpick-$Version-windows-x64.zip"
 $expectedPrefix = $packageRoot.TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
 if (-not $stageDir.StartsWith($expectedPrefix, [StringComparison]::OrdinalIgnoreCase)) {
     throw 'Refusing to stage outside the build/package directory.'

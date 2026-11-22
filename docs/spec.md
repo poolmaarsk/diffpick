@@ -296,8 +296,8 @@ ctest --test-dir build-Linux --output-on-failure
 ### CI and packaging
 
 - GitHub Actions CI builds and runs the tests on every push and pull request: Windows (MSVC 2022, Qt 6.8.3) and Linux (Ubuntu 24.04, distro Qt 6.4). Platform-specific tests run only on their platform. The Windows job publishes the portable ZIP, and a separate Ubuntu 22.04/Qt 6.4.3 job builds and smoke-tests the AppImage; both packages are uploaded as workflow artifacts.
-- Windows: `cmake --build build-Windows --target package_windows` runs `windeployqt`, resolves the MSYS2/MinGW runtime dependencies, verifies that no imported DLL is missing, and creates `build-Windows/package/diffpick-windows-x64.zip` (about 25–40 MB, accepted). The zip contains the Qt LGPL and third-party license texts and where to get Qt sources. The exe is unsigned for now (see Q4). A WiX or Inno Setup installer is optional, later.
-- Linux: `cmake --install` to `~/.local`; the `package_appimage` target uses pinned linuxdeploy and Qt-plugin releases to create `build-Linux/package/diffpick-linux-x86_64.AppImage`, including X11 and Wayland platform plugins.
+- Windows: `cmake --build build-Windows --target package_windows` runs `windeployqt`, resolves the MSYS2/MinGW runtime dependencies, verifies that no imported DLL is missing, and creates `build-Windows/package/diffpick-<version>-windows-x64.zip`. The zip contains the Qt LGPL and third-party license texts and where to get Qt sources. The exe is unsigned for now (see Q4). A WiX or Inno Setup installer is optional, later.
+- Linux: `cmake --install` to `~/.local`; the `package_appimage` target uses pinned linuxdeploy and Qt-plugin releases to create `build-Linux/package/diffpick-<version>-linux-x86_64.AppImage`, including X11 and Wayland platform plugins.
 
 ## Development rules
 
