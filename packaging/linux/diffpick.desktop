@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Diffpick
+Comment=Choose files and folders to compare in Meld
+Exec=diffpick %F
+Icon=diffpick
+Terminal=false
+Categories=Development;Utility;
+StartupNotify=true

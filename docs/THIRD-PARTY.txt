@@ -1,0 +1,14 @@
+Third-party runtime notices
+===========================
+
+The Windows portable package contains dynamically linked Qt 6 and supporting
+runtime libraries supplied by the MSYS2 UCRT64 toolchain. Their license texts
+are collected under the licenses/ directory, grouped by package name.
+
+Runtime components include Qt 6, the GCC/MinGW runtime, ICU Unicode support,
+PCRE2, FreeType, HarfBuzz, Graphite2, GLib, Brotli, bzip2, zlib, zstd, libpng,
+libiconv/gettext, md4c, libb2, and double-conversion. Qt's bundled license set
+includes the Unicode/ICU license text used by its ICU dependency.
+
+diffpick's own project license is intentionally not asserted here; it remains
+an open project decision.

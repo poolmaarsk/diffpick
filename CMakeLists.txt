@@ -68,6 +68,8 @@ elseif(UNIX AND NOT APPLE)
     target_sources(diffpick PRIVATE src/IntegrationLinux.cpp)
 endif()
 
+include(Packaging)
+
 if(BUILD_TESTING)
     add_subdirectory(tests)
 endif()

@@ -1,0 +1,182 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      sign_windows:
+        description: Submit the Windows ZIP to SignPath for manual approval
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    name: Linux · Qt 6.4
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Check out sources
+        uses: actions/checkout@v4
+
+      - name: Check that the release tag matches the version
+        if: github.ref_type == 'tag'
+        run: |
+          version=$(sed -n 's/^set(DIFFPICK_VERSION \([0-9.]*\)).*/\1/p' cmake/DiffpickVersion.cmake)
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match version $version in cmake/DiffpickVersion.cmake"
+            exit 1
+          fi
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends \
+            cmake g++ ninja-build qt6-base-dev
+
+      - name: Configure
+        run: cmake --preset linux-release
+
+      - name: Build
+        run: cmake --build build-Linux --parallel
+
+      - name: Test
+        run: ctest --test-dir build-Linux --output-on-failure
+
+  windows:
+    name: Windows · MSVC 2022 · Qt 6.8
+    runs-on: windows-2022
+    outputs:
+      artifact_id: ${{ steps.upload-windows.outputs.artifact-id }}
+      product_version: ${{ steps.windows-version.outputs.version }}
+
+    steps:
+      - name: Check out sources
+        uses: actions/checkout@v4
+
+      - name: Set up MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: amd64
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.3'
+          arch: win64_msvc2022_64
+          cache: true
+
+      - name: Configure
+        run: cmake --preset windows-release
+
+      - name: Build
+        run: cmake --build build-Windows --parallel
+
+      - name: Test
+        run: ctest --test-dir build-Windows --output-on-failure
+
+      - name: Create portable package
+        run: cmake --build build-Windows --target package_windows
+
+      - name: Read packaged executable version
+        id: windows-version
+        run: |
+          $versionInfo = (Get-Item -LiteralPath build-Windows/package/diffpick/diffpick.exe).VersionInfo
+          if ($versionInfo.ProductName -cne 'Diffpick' -or
+              $versionInfo.ProductVersion -notmatch '^\d+\.\d+\.\d+$' -or
+              $versionInfo.ProductVersion -cne $versionInfo.FileVersion) {
+            throw 'The packaged executable has invalid product metadata.'
+          }
+          "version=$($versionInfo.ProductVersion)" >> $env:GITHUB_OUTPUT
+
+      - name: Upload portable package
+        id: upload-windows
+        uses: actions/upload-artifact@v4
+        with:
+          name: diffpick-windows-x64
+          path: build-Windows/package/diffpick-windows-x64.zip
+          if-no-files-found: error
+
+  sign-windows:
+    name: Sign Windows package
+    if: github.event_name == 'workflow_dispatch' && inputs.sign_windows && github.ref_name == github.event.repository.default_branch && github.ref_type == 'branch'
+    needs: windows
+    runs-on: windows-2022
+    environment: signpath
+    permissions:
+      actions: read
+      contents: read
+
+    steps:
+      - name: Submit to SignPath and wait for approval
+        uses: signpath/github-action-submit-signing-request@v3
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}
+          artifact-configuration-slug: ${{ vars.SIGNPATH_ARTIFACT_CONFIGURATION_SLUG }}
+          github-artifact-id: ${{ needs.windows.outputs.artifact_id }}
+          wait-for-completion: true
+          wait-for-completion-timeout-in-seconds: 3600
+          output-artifact-directory: signed
+          parameters: |
+            version: ${{ toJSON(needs.windows.outputs.product_version) }}
+
+      - name: Verify the timestamped executable
+        run: |
+          Expand-Archive -LiteralPath signed/diffpick-windows-x64.zip -DestinationPath verify-signed
+          $signature = Get-AuthenticodeSignature -LiteralPath verify-signed/diffpick.exe
+          if ($signature.Status -ne 'Valid' -or -not $signature.TimeStamperCertificate) {
+            throw "Expected a valid timestamped Authenticode signature. Status: $($signature.Status)"
+          }
+
+      - name: Upload verified signed package
+        uses: actions/upload-artifact@v4
+        with:
+          name: diffpick-windows-x64-signed
+          path: signed/diffpick-windows-x64.zip
+          if-no-files-found: error
+
+  appimage:
+    name: Linux AppImage · Qt 6.4
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Check out sources
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends \
+            cmake curl g++ libgl1-mesa-dev ninja-build xvfb
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.4.3'
+          arch: gcc_64
+          modules: qtwayland
+          cache: true
+
+      - name: Configure
+        run: cmake --preset linux-release
+
+      - name: Create AppImage
+        run: cmake --build build-Linux --target package_appimage --parallel
+
+      - name: Smoke-test AppImage
+        run: |
+          xvfb-run -a env APPIMAGE_EXTRACT_AND_RUN=1 \
+            ./build-Linux/package/diffpick-linux-x86_64.AppImage --version
+
+      - name: Upload AppImage
+        uses: actions/upload-artifact@v4
+        with:
+          name: diffpick-linux-x86_64
+          path: build-Linux/package/diffpick-linux-x86_64.AppImage
+          if-no-files-found: error
