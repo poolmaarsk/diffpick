@@ -44,7 +44,7 @@ jobs:
         run: cmake --build build-Linux --parallel
 
       - name: Test
-        run: ctest --test-dir build-Linux --output-on-failure
+        run: ctest --test-dir build-Linux --output-on-failure --timeout 60
 
   windows:
     name: Windows · MSVC 2022 · Qt 6.8
@@ -87,7 +87,7 @@ jobs:
         run: cmake --build build-Windows --parallel
 
       - name: Test
-        run: ctest --test-dir build-Windows --output-on-failure
+        run: ctest --test-dir build-Windows --output-on-failure --timeout 60
 
       - name: Create portable package
         run: cmake --build build-Windows --target package_windows

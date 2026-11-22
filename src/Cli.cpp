@@ -67,7 +67,7 @@ Request prepare(const Options &options, const QStringList &rawItems, const QStri
     {
         // The C locale used by headless Linux ignores numericMode. An explicit
         // Unicode locale keeps natural file-name ordering deterministic.
-        QCollator collator(QLocale(QLocale::English));
+        QCollator collator{QLocale{QLocale::English}};
         collator.setCaseSensitivity(Qt::CaseInsensitive);
         collator.setNumericMode(true);
         std::sort(request.items.begin(), request.items.end(),

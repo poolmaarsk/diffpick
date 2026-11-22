@@ -224,7 +224,8 @@ void SlotWidget::focusEditor()
 
 void SlotWidget::showBrowseMenu()
 {
-    m_browseButton->showMenu();
+    // QPushButton::showMenu() runs a nested event loop on older Qt versions.
+    m_browseButton->menu()->popup(m_browseButton->mapToGlobal(QPoint(0, m_browseButton->height())));
 }
 
 void SlotWidget::setBrowseShortcutText(const QString &shortcut)
