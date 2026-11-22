@@ -49,6 +49,8 @@ jobs:
   windows:
     name: Windows · MSVC 2022 · Qt 6.8
     runs-on: windows-2022
+    env:
+      WINDOWS_QT_VERSION: '6.8.3'
     outputs:
       artifact_id: ${{ steps.upload-windows.outputs.artifact-id }}
       product_version: ${{ steps.windows-version.outputs.version }}
@@ -65,9 +67,18 @@ jobs:
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
         with:
-          version: '6.8.3'
+          version: ${{ env.WINDOWS_QT_VERSION }}
           arch: win64_msvc2022_64
           cache: true
+
+      - name: Install Qt license texts
+        run: |
+          $licenseDir = Join-Path $env:QT_ROOT_DIR 'LICENSES'
+          New-Item -ItemType Directory -Path $licenseDir -Force | Out-Null
+          $upstream = "https://raw.githubusercontent.com/qt/qtbase/v$env:WINDOWS_QT_VERSION/LICENSES"
+          foreach ($license in @('LGPL-3.0-only.txt', 'GPL-3.0-only.txt')) {
+            Invoke-WebRequest -Uri "$upstream/$license" -OutFile (Join-Path $licenseDir $license)
+          }
 
       - name: Configure
         run: cmake --preset windows-release
@@ -160,7 +171,7 @@ jobs:
         with:
           version: '6.4.3'
           arch: gcc_64
-          modules: qtwayland
+          # Qt 6.4.3 includes the Wayland client plugins in its desktop package.
           cache: true
 
       - name: Configure
