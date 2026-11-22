@@ -1,0 +1,50 @@
+---
+# The blank lines after blocks and the guard-clause rules in docs/spec.md
+# ("Code style") are handled separately.
+Language: Cpp
+BasedOnStyle: LLVM
+Standard: c++17
+
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ColumnLimit: 100
+
+# Opening braces on their own lines for declarations and control statements.
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterClass: true
+  AfterStruct: true
+  AfterFunction: true
+  AfterEnum: false
+  AfterNamespace: false
+  AfterControlStatement: Always
+  BeforeElse: true
+  BeforeCatch: true
+  BeforeWhile: true
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+
+NamespaceIndentation: None
+IndentCaseLabels: false
+AccessModifierOffset: 0
+PointerAlignment: Right
+AlignAfterOpenBracket: Align
+BinPackArguments: true
+BinPackParameters: true
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+InsertBraces: true
+AllowShortEnumsOnASingleLine: true
+AllowShortLambdasOnASingleLine: All
+BreakConstructorInitializers: BeforeComma
+ConstructorInitializerIndentWidth: 4
+FixNamespaceComments: true
+SpacesBeforeTrailingComments: 2
+KeepEmptyLinesAtTheStartOfBlocks: false
+MaxEmptyLinesToKeep: 1
+
+# Includes are grouped by hand (own header, project, Qt, standard).
+SortIncludes: Never
+IncludeBlocks: Preserve

@@ -1,0 +1,32 @@
+# Build output
+/build/
+/build-*/
+
+# CMake and Ninja in-source artifacts
+/CMakeCache.txt
+/CMakeFiles/
+/Testing/
+/.ninja_deps
+/.ninja_log
+/build.ninja
+/cmake_install.cmake
+/install_manifest.txt
+
+# Machine-specific presets (compiler and Qt paths)
+/CMakeUserPresets.json
+
+# IDE and editor state
+/.idea/
+/.vs/
+/.vscode/
+*.autosave
+*.user
+*.user.*
+
+# Operating-system files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Local test output
+/result.txt
