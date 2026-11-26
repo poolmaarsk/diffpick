@@ -159,6 +159,8 @@ jobs:
   appimage:
     name: Linux AppImage · Qt 6.4
     runs-on: ubuntu-22.04
+    outputs:
+      package_name: ${{ steps.appimage-package.outputs.name }}
 
     steps:
       - name: Check out sources
@@ -205,3 +207,42 @@ jobs:
           name: ${{ steps.appimage-package.outputs.name }}
           path: ${{ steps.appimage-package.outputs.path }}
           if-no-files-found: error
+
+  release:
+    name: Prepare draft release
+    if: github.event_name == 'push' && github.ref_type == 'tag' && startsWith(github.ref_name, 'v')
+    needs: [linux, windows, appimage]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    concurrency:
+      group: release-${{ github.ref }}
+
+    steps:
+      - name: Check out sources
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Download Windows ZIP
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.windows.outputs.package_name }}
+          path: release-assets
+
+      - name: Download Linux AppImage
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.appimage.outputs.package_name }}
+          path: release-assets
+
+      - name: Attach packages to draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+          WINDOWS_PACKAGE: ${{ needs.windows.outputs.package_name }}
+          LINUX_PACKAGE: ${{ needs.appimage.outputs.package_name }}
+        run: |
+          bash scripts/prepare-release.sh "$RELEASE_TAG" \
+            "release-assets/$WINDOWS_PACKAGE.zip" "release-assets/$LINUX_PACKAGE.AppImage"
