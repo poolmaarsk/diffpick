@@ -104,12 +104,15 @@ Validation validate(const QStringList &items)
         {
             return {Problem::Missing, i};
         }
+    }
 
+    for (int i = 1; i < items.size(); ++i)
+    {
         for (int j = 0; j < i; ++j)
         {
             if (PathUtil::sameItem(items[i], items[j]))
             {
-                return {Problem::Duplicate, i};
+                return {Problem::None, -1, true};
             }
         }
     }
@@ -134,11 +137,6 @@ QStringList multiTabArgs(const QString &fixed, const QStringList &picked, bool f
     QStringList args;
     for (const QString &item : picked)
     {
-        if (PathUtil::sameItem(item, fixed))
-        {
-            continue;
-        }
-
         const QString pickedArg = QDir::toNativeSeparators(item);
         args << QStringLiteral("--diff");
         if (fixedOnLeft)

@@ -28,6 +28,8 @@ files. Native file pickers may look different on your system.
 
 The **Compare** button does the same as **Alt+C**. **Left** and **Right**
 are required. Add **Middle** for a three-way comparison.
+If you select the same file or folder more than once, choose **Compare anyway**
+to open it in Meld, or **Cancel** to return to the inputs.
 
 ## Input fields and Browse menu
 

@@ -14,6 +14,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QMenu>
+#include <QMessageBox>
 #include <QProcess>
 #include <QPushButton>
 #include <QScopeGuard>
@@ -57,6 +58,7 @@ class TstMainWindow : public QObject
 #ifdef Q_OS_LINUX
     void fileManagerIntegration();
     void compareDetectsMeldInBackground();
+    void duplicateInputsRequireConfirmation();
 #endif  // Q_OS_LINUX
 };
 
@@ -181,6 +183,62 @@ void TstMainWindow::compareDetectsMeldInBackground()
     QCOMPARE(argumentsFile.readAll(),
              QStringLiteral("run\norg.gnome.meld\n%1\n%2\n").arg(leftPath, rightPath).toUtf8());
     QTRY_VERIFY(compareButton->isEnabled());
+}
+void TstMainWindow::duplicateInputsRequireConfirmation()
+{
+    QTemporaryDir sandbox;
+    QVERIFY(sandbox.isValid());
+    const QString meldPath = sandbox.filePath(QStringLiteral("meld"));
+    QVERIFY(writeTestExecutable(meldPath, "#!/bin/sh\nprintf '%s\\n' \"$@\" > \"$0.args\"\n"));
+    QFile input(sandbox.filePath(QStringLiteral("input.txt")));
+    QVERIFY(input.open(QIODevice::WriteOnly));
+    input.close();
+
+    const QString settingsPath = sandbox.filePath(QStringLiteral("settings.ini"));
+    {
+        Settings settings(settingsPath);
+        settings.setMeldCommand(meldPath);
+        settings.setCloseAfterLaunch(false);
+    }
+
+    MainWindow window(settingsPath, nullptr);
+    window.setItems({input.fileName(), input.fileName()});
+    window.show();
+
+    auto *compare = window.findChild<QPushButton *>(QStringLiteral("compareButton"));
+    QVERIFY(compare);
+    for (const bool proceed : {false, true})
+    {
+        bool warningShown = false;
+        QTimer::singleShot(0, &window, [&] {
+            auto *warning = qobject_cast<QMessageBox *>(QApplication::activeModalWidget());
+            if (!warning)
+            {
+                return;
+            }
+
+            warningShown = warning->windowTitle() == QStringLiteral("Duplicate inputs") &&
+                           warning->defaultButton() == warning->button(QMessageBox::Cancel);
+            for (auto *button : warning->buttons())
+            {
+                if (proceed && warning->buttonRole(button) == QMessageBox::AcceptRole)
+                {
+                    button->click();
+                    return;
+                }
+            }
+
+            warning->reject();
+        });
+        window.compareNow();
+        QVERIFY(warningShown);
+        QCOMPARE(compare->isEnabled(), !proceed);
+    }
+
+    QFile args(meldPath + QStringLiteral(".args"));
+    QTRY_VERIFY(args.size() > 0);
+    QVERIFY(args.open(QIODevice::ReadOnly));
+    QCOMPARE(args.readAll(), QStringLiteral("%1\n%1\n").arg(input.fileName()).toUtf8());
 }
 #endif  // Q_OS_LINUX
 

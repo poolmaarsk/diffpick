@@ -124,7 +124,7 @@ The wrong kind of item is never an error. A slot accepts a file or a folder; the
 1. A file dialog opens inside the folder from the folder slot, with multi-select enabled. Native dialogs are allowed.
 2. If the folder contains a file with the same name as the compared file, it is preselected. Some native dialogs (e.g. the xdg-desktop-portal one) ignore preselection; this is accepted.
 3. The user picks one or more files. Cancel launches nothing and keeps the window open.
-4. Each picked file is compared with the fixed file in its own Meld tab: `meld --diff <fixed> <picked1> --diff <fixed> <picked2> …`. The fixed file stays on the side of the slot it came from. If the fixed file itself is picked, it is skipped.
+4. Each picked file is compared with the fixed file in its own Meld tab: `meld --diff <fixed> <picked1> --diff <fixed> <picked2> …`. The fixed file stays on the side of the slot it came from. Picking the fixed file itself requires confirmation before launching.
 5. More than 10 picked files asks once for confirmation before launching.
 
 The same picker is used when this situation arrives from the command line or the file manager, e.g. "Compare with marked" where one item is a file and the other a folder.
@@ -168,7 +168,7 @@ Launch rules:
 
 - Start detached with `QProcess::startDetached`. diffpick does not wait for Meld and cannot detect failures after Meld has started.
 - Pass arguments as a list, never through a shell.
-- Validate before launching: 2–3 items, all existing, no item used twice (see the "same item" rule).
+- Require 2–3 existing inputs before launching. If the same file or folder is used more than once, show a warning with **Compare anyway** and **Cancel**. Cancel is the default.
 - Meld not found → message pointing to Settings, window stays open.
 - Successful launch adds the comparison to Recent.
 
@@ -212,7 +212,7 @@ Operation switches (`--open`, `--compare`, `--mark`, `--compare-with-marked`, `-
 | `diffpick A [B [C]]` or `--open A [B [C]]` | Open the window prefilled, using the slot mapping from "Main window". |
 | `diffpick --compare [--sort] A B [C]` | Launch Meld directly; file vs. folder opens the file picker, and Cancel exits without launching. One path → open the window prefilled. More than 3 → error. `--sort` orders items by file name first. Used by Send To and file manager scripts. |
 | `diffpick --mark A` | Remember A. Silent. |
-| `diffpick --compare-with-marked B` | Compare the marked item (Left) with B (Right). The mark is kept, so several items can be compared against it. Nothing marked, marked item missing, or B is the marked item → error message. |
+| `diffpick --compare-with-marked B` | Compare the marked item (Left) with B (Right). The mark is kept, so several items can be compared against it. A missing mark or a missing marked item shows an error. Comparing the marked item with itself requires confirmation. |
 | `diffpick --install` / `--uninstall` | Add or remove system integration and print or show the result. |
 | `diffpick --help`, `--version` | Standard Qt `QCommandLineParser` output (a message box on Windows). |
 

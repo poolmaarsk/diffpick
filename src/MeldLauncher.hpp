@@ -19,23 +19,23 @@ struct Command
 // Returns an invalid Command when Meld is not found.
 Command findMeld(const QString &customCommand);
 
-enum class Problem { None, WrongCount, Missing, Duplicate };
+enum class Problem { None, WrongCount, Missing };
 
 struct Validation
 {
     Problem problem = Problem::None;
-    int index = -1;  // item that is missing or used a second time
+    int index = -1;  // item that is missing
+    bool hasDuplicate = false;
 };
 
-// Checks items in pane order before a launch: 2-3 items, all existing,
-// no item used twice.
+// Requires 2-3 existing items and flags repeated paths for confirmation.
 Validation validate(const QStringList &items);
 
 // "meld A B" or "meld LEFT MIDDLE RIGHT".
 QStringList compareArgs(const QStringList &items);
 
 // "meld --diff F X --diff F Y ...", one tab per picked file. The fixed file
-// stays on its side; a picked file that is the fixed file itself is skipped.
+// stays on its side.
 QStringList multiTabArgs(const QString &fixed, const QStringList &picked, bool fixedOnLeft);
 
 // Starts Meld detached, without a shell.

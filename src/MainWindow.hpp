@@ -36,6 +36,7 @@ class MainWindow : public QMainWindow
                           const Comparison &comparison);
     QStringList items() const;
     void showValidationError(const MeldLauncher::Validation &validation);
+    bool confirmDuplicateInputs();
     void editText(SlotWidget *target);
     void storePastedText(SlotWidget *target, const QString &text,
                          PastedText::LineEnding lineEnding);

@@ -58,8 +58,6 @@ QString problemMessage(const Cli::Request &request)
                                   : QObject::tr("The selected item does not exist.");
     case Cli::Problem::MarkedMissing:
         return QObject::tr("The marked item does not exist.");
-    case Cli::Problem::Duplicate:
-        return QObject::tr("Item %1 is already used in another slot.").arg(request.index + 1);
     case Cli::Problem::None:
         return {};
     }

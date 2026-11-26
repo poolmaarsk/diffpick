@@ -39,6 +39,7 @@
 #include <QUrl>
 #include <QVBoxLayout>
 
+#include <algorithm>
 #include <memory>
 
 MainWindow::MainWindow(QWidget *parent)
@@ -663,6 +664,7 @@ void MainWindow::compare()
 
     const bool hasMixedKinds =
         itemKinds.contains(PathUtil::Kind::File) && itemKinds.contains(PathUtil::Kind::Directory);
+    bool hasDuplicate = validation.hasDuplicate;
 
     QStringList launchArgs;
     if (selected.size() == 2 && hasMixedKinds)
@@ -693,6 +695,9 @@ void MainWindow::compare()
             return;
         }
 
+        hasDuplicate = std::any_of(picked.cbegin(), picked.cend(), [&fixedFile](const QString &file) {
+            return PathUtil::sameItem(fixedFile, file);
+        });
         launchArgs = MeldLauncher::multiTabArgs(fixedFile, picked, fixedOnLeft);
         if (launchArgs.isEmpty())
         {
@@ -725,11 +730,17 @@ void MainWindow::compare()
             return;
         }
 
+        hasDuplicate = pickedValidation.hasDuplicate;
         launchArgs = MeldLauncher::compareArgs(selected);
     }
     else
     {
         launchArgs = MeldLauncher::compareArgs(selected);
+    }
+
+    if (hasDuplicate && !confirmDuplicateInputs())
+    {
+        return;
     }
 
     const QString customCommand = m_settings.meldCommand();
@@ -794,13 +805,21 @@ void MainWindow::showValidationError(const MeldLauncher::Validation &validation)
     case MeldLauncher::Problem::Missing:
         message = tr("Item %1 does not exist.").arg(validation.index + 1);
         break;
-    case MeldLauncher::Problem::Duplicate:
-        message = tr("Item %1 is already used in another slot.").arg(validation.index + 1);
-        break;
     case MeldLauncher::Problem::None:
         return;
     }
 
     Log::error(message);
     QMessageBox::warning(this, tr("Cannot compare"), message);
+}
+
+bool MainWindow::confirmDuplicateInputs()
+{
+    QMessageBox warning(QMessageBox::Warning, tr("Duplicate inputs"),
+                        tr("The same file or folder is selected more than once."),
+                        QMessageBox::Cancel, this);
+    const auto *compareAnyway = warning.addButton(tr("Compare anyway"), QMessageBox::AcceptRole);
+    warning.setDefaultButton(QMessageBox::Cancel);
+    warning.exec();
+    return warning.clickedButton() == compareAnyway;
 }

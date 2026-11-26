@@ -15,7 +15,6 @@ enum class Problem {
     WrongCount,
     Missing,
     MarkedMissing,
-    Duplicate,
 };
 
 struct Options

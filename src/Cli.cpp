@@ -129,10 +129,6 @@ Request prepare(const Options &options, const QStringList &rawItems, const QStri
         request.problem = Problem::Missing;
         request.index = validation.index;
         break;
-    case MeldLauncher::Problem::Duplicate:
-        request.problem = Problem::Duplicate;
-        request.index = validation.index;
-        break;
     case MeldLauncher::Problem::WrongCount:
         request.problem = Problem::WrongCount;
         break;

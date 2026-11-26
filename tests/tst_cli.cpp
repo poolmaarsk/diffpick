@@ -77,6 +77,11 @@ void TstCli::compareModes()
     request = Cli::prepare(compare, {a, b}, tmp.path());
     QVERIFY(request.isValid());
     QVERIFY(request.shouldCompareImmediately());
+
+    request = Cli::prepare(compare, {a, a}, tmp.path());
+    QVERIFY(request.isValid());
+    QCOMPARE(request.items, (QStringList{a, a}));
+    QVERIFY(request.shouldCompareImmediately());
 }
 
 void TstCli::markModes()
@@ -99,6 +104,11 @@ void TstCli::markModes()
     request = Cli::prepare(compareMarked, {other}, tmp.path(), marked);
     QVERIFY(request.isValid());
     QCOMPARE(request.items, (QStringList{marked, other}));
+    QVERIFY(request.shouldCompareImmediately());
+
+    request = Cli::prepare(compareMarked, {marked}, tmp.path(), marked);
+    QVERIFY(request.isValid());
+    QCOMPARE(request.items, (QStringList{marked, marked}));
     QVERIFY(request.shouldCompareImmediately());
 }
 
@@ -130,13 +140,11 @@ void TstCli::rejectsInvalidRequests()
     QCOMPARE(
         Cli::prepare(compare, {a, tmp.path() + QStringLiteral("/missing")}, tmp.path()).problem,
         Cli::Problem::Missing);
-    QCOMPARE(Cli::prepare(compare, {a, a}, tmp.path()).problem, Cli::Problem::Duplicate);
 
     Cli::Options compareMarked;
     compareMarked.compareWithMarked = true;
     QCOMPARE(Cli::prepare(compareMarked, {b}, tmp.path(), QString()).problem,
              Cli::Problem::MarkedMissing);
-    QCOMPARE(Cli::prepare(compareMarked, {a}, tmp.path(), a).problem, Cli::Problem::Duplicate);
 }
 
 QTEST_GUILESS_MAIN(TstCli)

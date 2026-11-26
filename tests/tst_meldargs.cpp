@@ -193,9 +193,11 @@ void TstMeldArgs::validate()
     QVERIFY(QDir().mkpath(dir));
     const QString missing = m_tmp.path() + "/missing.txt";
 
-    const auto check = [](const QStringList &items, Problem problem, int index) {
+    const auto check = [](const QStringList &items, Problem problem, int index,
+                          bool hasDuplicate = false) {
         const auto result = MeldLauncher::validate(items);
-        return result.problem == problem && result.index == index;
+        return result.problem == problem && result.index == index &&
+               result.hasDuplicate == hasDuplicate;
     };
 
     QVERIFY(check({a, b}, Problem::None, -1));
@@ -204,9 +206,10 @@ void TstMeldArgs::validate()
     QVERIFY(check({a}, Problem::WrongCount, -1));
     QVERIFY(check({a, b, c, dir}, Problem::WrongCount, -1));
     QVERIFY(check({a, missing}, Problem::Missing, 1));
-    QVERIFY(check({a, b, a}, Problem::Duplicate, 2));
+    QVERIFY(check({a, b, a}, Problem::None, -1, true));
+    QVERIFY(check({a, a, missing}, Problem::Missing, 2));
 #ifdef Q_OS_WIN
-    QVERIFY(check({a, m_tmp.path() + "/A.TXT"}, Problem::Duplicate, 1));
+    QVERIFY(check({a, m_tmp.path() + "/A.TXT"}, Problem::None, -1, true));
 #endif  // Q_OS_WIN
 }
 
@@ -240,8 +243,9 @@ void TstMeldArgs::multiTabArgs()
              (QStringList{"--diff", F, X, "--diff", F, Y}));
     QCOMPARE(MeldLauncher::multiTabArgs(fixed, {x, y}, false),
              (QStringList{"--diff", X, F, "--diff", Y, F}));
-    QCOMPARE(MeldLauncher::multiTabArgs(fixed, {x, fixed}, true), (QStringList{"--diff", F, X}));
-    QVERIFY(MeldLauncher::multiTabArgs(fixed, {fixed}, true).isEmpty());
+    QCOMPARE(MeldLauncher::multiTabArgs(fixed, {x, fixed}, true),
+             (QStringList{"--diff", F, X, "--diff", F, F}));
+    QCOMPARE(MeldLauncher::multiTabArgs(fixed, {fixed}, false), (QStringList{"--diff", F, F}));
 }
 
 QTEST_GUILESS_MAIN(TstMeldArgs)
