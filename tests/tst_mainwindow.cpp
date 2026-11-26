@@ -352,6 +352,15 @@ void TstMainWindow::actionButtonDesign()
     QVERIFY(swap->width() >= 240);
     QVERIFY(!swap->styleSheet().isEmpty());
     QVERIFY(!compare->styleSheet().isEmpty());
+
+    const int editorTop = editor->mapTo(&window, QPoint()).y();
+    const int compareTop = compare->mapTo(&window, QPoint()).y();
+    const int expandedHeight = window.height() + 300;
+    window.resize(window.width(), expandedHeight);
+    QCoreApplication::processEvents();
+    QCOMPARE(window.height(), expandedHeight);
+    QCOMPARE(editor->mapTo(&window, QPoint()).y(), editorTop);
+    QCOMPARE(compare->mapTo(&window, QPoint()).y(), compareTop);
 }
 
 void TstMainWindow::clipboardPaths()

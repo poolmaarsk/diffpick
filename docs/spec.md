@@ -32,7 +32,7 @@ The minimum supported Qt version is 6.4; the code must build with it. Qt is link
 
 ## Main window
 
-One compact window with three slots and a compare button. The window opens with focus in the Left slot.
+One compact window with three slots and a compare button. The window opens with focus in the Left slot. The form stays at the top when the window grows vertically, and the path fields expand with the width.
 
 | Slot | Required | Meld pane |
 | --- | --- | --- |

@@ -113,6 +113,7 @@ MainWindow::MainWindow(const QString &settingsFile, QWidget *parent)
     buttons->addStretch();
     buttons->addWidget(m_compareButton);
     layout->addLayout(buttons);
+    layout->addStretch();
     setCentralWidget(central);
 
     m_integrationNotice->setObjectName(QStringLiteral("integrationNotice"));
