@@ -68,7 +68,7 @@ Window-level controls:
 - **Swap** exchanges Left and Right, including the editable pasted text and its line-ending setting.
 - Alt+S clicks **Swap**.
 - The top-level **Menu** contains **Recent**, **System integration** and a checkable **Close after launch** action.
-- **Recent** contains the last 15 comparisons; picking one fills the slots. An entry stores the slot values as entered, so a file + folder entry opens the picker again. Entries whose paths no longer exist are hidden; existence is checked in the background at startup, and until the check finishes all entries are shown.
+- **Recent** contains the last 15 comparisons; picking one fills the slots. The **×** at the left of each entry removes it from the history. An entry stores the slot values as entered, so a file + folder entry opens the picker again. Entries whose paths no longer exist are hidden; existence is checked in the background at startup, and until the check finishes all entries are shown.
 - **System integration** contains **Install**, **Remove** and **Repair**.
 - **Close after launch** defaults to on and is remembered.
 - **Settings** in the menu opens the settings dialog.

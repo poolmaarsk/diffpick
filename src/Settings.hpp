@@ -60,6 +60,7 @@ class Settings
 
     QList<Comparison> history() const;                // newest first
     void addToHistory(const Comparison &comparison);  // moves duplicates to the front
+    void removeFromHistory(const Comparison &comparison);
 
     QString marked() const;
     void setMarked(const QString &path);
@@ -68,5 +69,6 @@ class Settings
     void setIntegrationExePath(const QString &path);
 
     private:
+    void writeHistory(const QList<Comparison> &list);
     mutable QSettings m_settings;
 };

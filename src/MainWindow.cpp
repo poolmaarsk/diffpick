@@ -36,8 +36,10 @@
 #include <QShortcut>
 #include <QStatusBar>
 #include <QThreadPool>
+#include <QToolButton>
 #include <QUrl>
 #include <QVBoxLayout>
+#include <QWidgetAction>
 
 #include <algorithm>
 #include <memory>
@@ -226,7 +228,9 @@ void MainWindow::rebuildRecentMenu(const QList<Comparison> &history)
         }
 
         names << displayName(comparison.right);
-        QAction *action = m_recentMenu->addAction(names.join(QStringLiteral(" ↔ ")));
+        const QString title = names.join(QStringLiteral(" ↔ "));
+        QString buttonText = title;
+        buttonText.replace(QLatin1Char('&'), QStringLiteral("&&"));
         QStringList paths{QDir::toNativeSeparators(comparison.left)};
         if (!comparison.middle.isEmpty())
         {
@@ -234,21 +238,60 @@ void MainWindow::rebuildRecentMenu(const QList<Comparison> &history)
         }
 
         paths << QDir::toNativeSeparators(comparison.right);
-        action->setToolTip(paths.join(QLatin1Char('\n')));
+        const QString tooltip = paths.join(QLatin1Char('\n'));
+
+        auto *action = new QWidgetAction(m_recentMenu);
+        action->setText(buttonText);
+        auto *row = new QWidget;
+        auto *rowLayout = new QHBoxLayout(row);
+        rowLayout->setContentsMargins(4, 1, 4, 1);
+        rowLayout->setSpacing(2);
+
+        auto *remove = new QToolButton(row);
+        remove->setText(QStringLiteral("×"));
+        remove->setAutoRaise(true);
+        remove->setFocusPolicy(Qt::NoFocus);
+        remove->setAccessibleName(tr("Remove %1 from recent").arg(title));
+        remove->setToolTip(tr("Remove from recent"));
+        rowLayout->addWidget(remove);
+
+        auto *open = new QPushButton(buttonText, row);
+        open->setFocusPolicy(Qt::NoFocus);
+        open->setToolTip(tooltip);
+        open->setFlat(true);
+        open->setStyleSheet(QStringLiteral(
+            "QPushButton { text-align: left; border: 0; padding: 3px 6px; }"
+            "QPushButton:hover { background: palette(highlight); color: palette(highlighted-text); }"));
+        rowLayout->addWidget(open, 1);
+
+        action->setDefaultWidget(row);
+        m_recentMenu->addAction(action);
+        connect(open, &QPushButton::clicked, action, &QAction::trigger);
         connect(action, &QAction::triggered, this,
                 [this, comparison] { restoreComparison(comparison); });
+
+        connect(
+            remove, &QToolButton::clicked, this,
+            [this, comparison, history] {
+                m_settings.removeFromHistory(comparison);
+                QList<Comparison> remaining = history;
+                remaining.removeAll(comparison);
+                rebuildRecentMenu(remaining);
+                checkRecentInBackground();
+            },
+            Qt::QueuedConnection);
     }
 }
 
 void MainWindow::checkRecentInBackground()
 {
+    const quint64 generation = ++m_recentCheckGeneration;
     const QList<Comparison> history = m_settings.history();
     if (history.isEmpty())
     {
         return;
     }
 
-    const quint64 generation = ++m_recentCheckGeneration;
     QPointer<MainWindow> self(this);
     QThreadPool::globalInstance()->start([self, history, generation] {
         QList<Comparison> available;

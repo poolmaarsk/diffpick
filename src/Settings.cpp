@@ -169,6 +169,22 @@ void Settings::addToHistory(const Comparison &comparison)
         list.removeLast();
     }
 
+    writeHistory(list);
+}
+
+void Settings::removeFromHistory(const Comparison &comparison)
+{
+    QList<Comparison> list = history();
+    if (list.removeAll(comparison) == 0)
+    {
+        return;
+    }
+
+    writeHistory(list);
+}
+
+void Settings::writeHistory(const QList<Comparison> &list)
+{
     m_settings.remove(kHistory);
     m_settings.beginWriteArray(kHistory, list.size());
     for (int i = 0; i < list.size(); ++i)

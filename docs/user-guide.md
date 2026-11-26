@@ -104,7 +104,7 @@ when you are done with them.
 
 | Item | What it does |
 | --- | --- |
-| **Recent** | Restores the inputs from one of the last 15 successful comparisons. For example, select yesterday's `before.txt ↔ after.txt`, then press **Compare** to launch it again. |
+| **Recent** | Restores the inputs from one of the last 15 successful comparisons. For example, select yesterday's `before.txt ↔ after.txt`, then press **Compare** to launch it again. Click **×** at the left of an entry to remove it from the history. |
 | **Close after launch** | Closes Diffpick after Meld starts. Turn it off if you want to keep selecting comparisons in the same window. |
 | **System integration** | Installs, repairs, or removes file manager actions for your user account. See [File manager integration](#file-manager-integration). |
 | **Settings…** | Opens the preferences below. **OK** saves the Meld command and logging preference. |

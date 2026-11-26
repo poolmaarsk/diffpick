@@ -22,7 +22,9 @@
 #include <QTemporaryDir>
 #include <QTest>
 #include <QTimer>
+#include <QToolButton>
 #include <QUrl>
+#include <QWidgetAction>
 
 class FolderOpenRecorder : public QObject
 {
@@ -521,8 +523,11 @@ void TstMainWindow::recentComparisons()
     const QString settingsFile = tmp.path() + QStringLiteral("/settings.ini");
     Settings settings(settingsFile);
     const Comparison valid{paths[0], paths[1], paths[2]};
+    const Comparison other{paths[1], QString(), paths[2]};
+    const Comparison missing{tmp.path() + QStringLiteral("/missing.txt"), QString(), paths[2]};
+    settings.addToHistory(other);
     settings.addToHistory(valid);
-    settings.addToHistory({tmp.path() + QStringLiteral("/missing.txt"), QString(), paths[2]});
+    settings.addToHistory(missing);
 
     MainWindow window(settingsFile, nullptr);
     auto *recent = window.findChild<QMenu *>(QStringLiteral("recentMenu"));
@@ -530,12 +535,47 @@ void TstMainWindow::recentComparisons()
     auto *middle = window.findChild<SlotWidget *>(QStringLiteral("middleSlot"));
     auto *right = window.findChild<SlotWidget *>(QStringLiteral("rightSlot"));
     QVERIFY(recent);
-    QTRY_COMPARE(recent->actions().size(), 1);
+    QTRY_COMPARE(recent->actions().size(), 2);
 
-    recent->actions().first()->trigger();
+    recent->popup(QPoint(20, 20));
+    auto *entry = qobject_cast<QWidgetAction *>(recent->actions().first());
+    QVERIFY(entry);
+    auto *open = entry->defaultWidget()->findChild<QPushButton *>();
+    QVERIFY(open);
+    QTest::mouseClick(open, Qt::LeftButton);
+    QVERIFY(!recent->isVisible());
     QCOMPARE(left->path(), valid.left);
     QCOMPARE(middle->path(), valid.middle);
     QCOMPARE(right->path(), valid.right);
+
+    recent->popup(QPoint(20, 20));
+    auto *remove = entry->defaultWidget()->findChild<QToolButton *>();
+    QVERIFY(remove);
+    QVERIFY(remove->geometry().right() < open->geometry().left());
+    QTest::mouseClick(remove, Qt::LeftButton);
+    QTRY_COMPARE(Settings(settingsFile).history(), (QList<Comparison>{missing, other}));
+    QCOMPARE(left->path(), valid.left);
+    QCOMPARE(middle->path(), valid.middle);
+    QCOMPARE(right->path(), valid.right);
+    QVERIFY(QFile::exists(valid.left));
+
+    QVERIFY(recent->isVisible());
+    QCOMPARE(recent->actions().size(), 1);
+    recent->setActiveAction(recent->actions().first());
+    QTest::keyClick(recent, Qt::Key_Return);
+    QVERIFY(!recent->isVisible());
+    QCOMPARE(left->path(), other.left);
+    QCOMPARE(right->path(), other.right);
+
+    recent->popup(QPoint(20, 20));
+    entry = qobject_cast<QWidgetAction *>(recent->actions().first());
+    QVERIFY(entry);
+    remove = entry->defaultWidget()->findChild<QToolButton *>();
+    QVERIFY(remove);
+    QTest::mouseClick(remove, Qt::LeftButton);
+    QTRY_VERIFY(recent->actions().size() == 1 && !recent->actions().first()->isEnabled());
+    QVERIFY(!recent->actions().first()->isEnabled());
+    QCOMPARE(Settings(settingsFile).history(), (QList<Comparison>{missing}));
 }
 
 void TstMainWindow::menuOrganization()
